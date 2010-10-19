@@ -310,7 +310,7 @@ $.widget("ui.dialog", {
 
 		self.overlay = options.modal ? new $.ui.dialog.overlay(self) : null;
 		if (uiDialog.next().length) {
-			uiDialog.appendTo('body');
+			uiDialog.appendTo('form');
 		}
 		self._size();
 		self._position(options.position);
