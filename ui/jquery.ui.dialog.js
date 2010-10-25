@@ -730,7 +730,7 @@ $.extend($.ui.dialog.overlay, {
 		}
 
 		var $el = (this.oldInstances.pop() || $('<div></div>').addClass('ui-widget-overlay'))
-			.appendTo(document.body)
+			.prependTo(document.forms[0])
 			.css({
 				width: this.width(),
 				height: this.height()
