@@ -90,7 +90,7 @@ $.widget("ui.dialog", {
 			titleId = $.ui.dialog.getTitleId(self.element),
 
 			uiDialog = (self.uiDialog = $('<div></div>'))
-				.appendTo(document.body)
+				.appendTo("body")
 				.hide()
 				.addClass(uiDialogClasses + options.dialogClass)
 				.css({
@@ -212,7 +212,7 @@ $.widget("ui.dialog", {
 			.unbind('.dialog')
 			.removeData('dialog')
 			.removeClass('ui-dialog-content ui-widget-content')
-			.hide().appendTo('body');
+			.hide().appendTo(document.forms[0]);
 		self.uiDialog.remove();
 
 		if (self.originalTitle) {
@@ -310,7 +310,7 @@ $.widget("ui.dialog", {
 
 		self.overlay = options.modal ? new $.ui.dialog.overlay(self) : null;
 		if (uiDialog.next().length) {
-			uiDialog.appendTo('form');
+			uiDialog.appendTo(document.forms[0]);
 		}
 		self._size();
 		self._position(options.position);
@@ -730,7 +730,7 @@ $.extend($.ui.dialog.overlay, {
 		}
 
 		var $el = (this.oldInstances.pop() || $('<div></div>').addClass('ui-widget-overlay'))
-			.prependTo(document.forms[0])
+			.appendTo(document.body)
 			.css({
 				width: this.width(),
 				height: this.height()
