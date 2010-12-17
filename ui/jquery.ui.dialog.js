@@ -258,6 +258,10 @@ $.widget("ui.dialog", {
 			});
 			$.ui.dialog.maxZ = maxZ;
 		}
+		
+		if ( $(".ui-dialog:visible").not(self.uiDialog).length === 0) {
+			$(document.body).css("overflow","auto");
+		}
 
 		return self;
 	},
@@ -299,6 +303,8 @@ $.widget("ui.dialog", {
 
 	open: function() {
 		if (this._isOpen) { return; }
+				
+		$(document.body).css("overflow","hidden");
 
 		var self = this,
 			options = self.options,
