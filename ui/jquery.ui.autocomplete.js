@@ -130,7 +130,7 @@ $.widget( "ui.autocomplete", {
 						$( document ).one( 'mousedown', function( event ) {
 							if ( event.target !== self.element[ 0 ] &&
 								event.target !== menuElement &&
-								!$.ui.contains( menuElement, event.target ) ) {
+								!$.contains( menuElement, event.target ) ) {
 								self.close();
 							}
 						});
@@ -165,6 +165,7 @@ $.widget( "ui.autocomplete", {
 						// term synchronously and asynchronously :-(
 						setTimeout(function() {
 							self.previous = previous;
+							self.selectedItem = item;
 						}, 1);
 					}
 
@@ -188,8 +189,6 @@ $.widget( "ui.autocomplete", {
 				}
 			})
 			.zIndex( this.element.zIndex() + 1 )
-			// workaround for jQuery bug #5781 http://dev.jquery.com/ticket/5781
-			.css({ top: 0, left: 0 })
 			.hide()
 			.data( "menu" );
 		if ( $.fn.bgiframe ) {
@@ -233,11 +232,22 @@ $.widget( "ui.autocomplete", {
 				if (self.xhr) {
 					self.xhr.abort();
 				}
-				self.xhr = $.getJSON( url, request, function( data, status, xhr ) {
-					if ( xhr === self.xhr ) {
-						response( data );
+				self.xhr = $.ajax({
+					url: url,
+					data: request,
+					dataType: "json",
+					success: function( data, status, xhr ) {
+						if ( xhr === self.xhr ) {
+							response( data );
+						}
+						self.xhr = null;
+					},
+					error: function( xhr ) {
+						if ( xhr === self.xhr ) {
+							response( [] );
+						}
+						self.xhr = null;
 					}
-					self.xhr = null;
 				});
 			};
 		} else {
@@ -322,11 +332,13 @@ $.widget( "ui.autocomplete", {
 		// TODO refresh should check if the active item is still in the dom, removing the need for a manual deactivate
 		this.menu.deactivate();
 		this.menu.refresh();
-		this.menu.element.show().position( $.extend({
+
+		// size and position menu
+		ul.show();
+		this._resizeMenu();
+		ul.position( $.extend({
 			of: this.element
 		}, this.options.position ));
-
-		this._resizeMenu();
 	},
 
 	_resizeMenu: function() {

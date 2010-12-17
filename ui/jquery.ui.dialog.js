@@ -171,13 +171,6 @@ $.widget("ui.dialog", {
 				.html(title)
 				.prependTo(uiDialogTitlebar);
 
-		//handling of deprecated beforeclose (vs beforeClose) option
-		//Ticket #4669 http://dev.jqueryui.com/ticket/4669
-		//TODO: remove in 1.9pre
-		if ($.isFunction(options.beforeclose) && !$.isFunction(options.beforeClose)) {
-			options.beforeClose = options.beforeclose;
-		}
-
 		uiDialogTitlebar.find("*").add(uiDialogTitlebar).disableSelection();
 
 		if (options.draggable && $.fn.draggable) {
@@ -228,7 +221,7 @@ $.widget("ui.dialog", {
 
 	close: function(event) {
 		var self = this,
-			maxZ;
+			maxZ, thisZ;
 		
 		if (false === self._trigger('beforeClose', event)) {
 			return;
@@ -257,7 +250,10 @@ $.widget("ui.dialog", {
 			maxZ = 0;
 			$('.ui-dialog').each(function() {
 				if (this !== self.uiDialog[0]) {
-					maxZ = Math.max(maxZ, $(this).css('z-index'));
+					thisZ = $(this).css('z-index');
+					if(!isNaN(thisZ)) {
+						maxZ = Math.max(maxZ, thisZ);
+					}
 				}
 			});
 			$.ui.dialog.maxZ = maxZ;
@@ -524,10 +520,7 @@ $.widget("ui.dialog", {
 		if (!isVisible) {
 			this.uiDialog.show();
 		}
-		this.uiDialog
-			// workaround for jQuery bug #5781 http://dev.jquery.com/ticket/5781
-			.css({ top: 0, left: 0 })
-			.position(position);
+		this.uiDialog.position(position);
 		if (!isVisible) {
 			this.uiDialog.hide();
 		}
@@ -562,12 +555,6 @@ $.widget("ui.dialog", {
 			uiDialog = self.uiDialog;
 
 		switch (key) {
-			//handling of deprecated beforeclose (vs beforeClose) option
-			//Ticket #4669 http://dev.jqueryui.com/ticket/4669
-			//TODO: remove in 1.9pre
-			case "beforeclose":
-				key = "beforeClose";
-				break;
 			case "buttons":
 				self._createButtons(value);
 				break;
@@ -588,7 +575,7 @@ $.widget("ui.dialog", {
 				}
 				break;
 			case "draggable":
-				var isDraggable = uiDialog.is( ":data(draggable)" )
+				var isDraggable = uiDialog.is( ":data(draggable)" );
 				if ( isDraggable && !value ) {
 					uiDialog.draggable( "destroy" );
 				}
@@ -602,7 +589,7 @@ $.widget("ui.dialog", {
 				break;
 			case "resizable":
 				// currently resizable, becoming non-resizable
-				var isResizable = uiDialog.is( ":data(resizable)" )
+				var isResizable = uiDialog.is( ":data(resizable)" );
 				if (isResizable && !value) {
 					uiDialog.resizable('destroy');
 				}
@@ -631,7 +618,9 @@ $.widget("ui.dialog", {
 		 * divs will both have width and height set, so we need to reset them
 		 */
 		var options = this.options,
-			nonContentHeight;
+			nonContentHeight,
+			minContentHeight,
+			isVisible = this.uiDialog.is( ":visible" );
 
 		// reset content sizing
 		// hide for non content measurement because height: 0 doesn't work in IE quirks mode (see #4350)
@@ -652,6 +641,26 @@ $.widget("ui.dialog", {
 				width: options.width
 			})
 			.height();
+		minContentHeight = Math.max( 0, options.minHeight - nonContentHeight );
+		
+		if ( options.height === "auto" ) {
+			// only needed for IE6 support
+			if ( $.support.minHeight ) {
+				this.element.css({
+					minHeight: minContentHeight,
+					height: "auto"
+				});
+			} else {
+				this.uiDialog.show();
+				var autoHeight = this.element.css( "height", "auto" ).height();
+				if ( !isVisible ) {
+					this.uiDialog.hide();
+				}
+				this.element.height( Math.max( autoHeight, minContentHeight ) );
+			}
+		} else {
+			this.element.height( Math.max( options.height - nonContentHeight, 0 ) );
+		}
 
 		this.element
 			.css(options.height === 'auto' ? {
@@ -745,7 +754,10 @@ $.extend($.ui.dialog.overlay, {
 	},
 
 	destroy: function($el) {
-		this.oldInstances.push(this.instances.splice($.inArray($el, this.instances), 1)[0]);
+		var indexOf = $.inArray($el, this.instances);
+		if (indexOf != -1){
+			this.oldInstances.push(this.instances.splice(indexOf, 1)[0]);
+		}
 
 		if (this.instances.length === 0) {
 			$([document, window]).unbind('.dialog-overlay');
