@@ -80,6 +80,12 @@ $.widget = function( name, base, prototype ) {
 
 $.widget.bridge = function( name, object ) {
 	$.fn[ name ] = function( options ) {
+	
+		// fixes flash z-index bug
+		if (arguments.length > 0) {
+			jQueryToggleFlashVisibility(arguments)
+		};
+		
 		var isMethodCall = typeof options === "string",
 			args = Array.prototype.slice.call( arguments, 1 ),
 			returnValue = this;
